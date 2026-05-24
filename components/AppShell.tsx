@@ -8,14 +8,19 @@ import {
   Dimensions,
   Pressable,
   ScrollView,
-  Switch,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { useAppStore } from '@/lib/store';
 import { colors, borderRadius, spacing, shadows } from '@/lib/theme';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
+
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Espanol' },
+] as const;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(280, SCREEN_WIDTH * 0.8);
@@ -81,6 +86,24 @@ function MoonIcon({ size = 24, color = '#000' }: { size?: number; color?: string
   );
 }
 
+function SunIcon({ size = 24, color = '#000' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="5" stroke={color} strokeWidth="2" />
+      <Path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+function GlobeIcon({ size = 24, color = '#000' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" />
+      <Path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke={color} strokeWidth="2" />
+    </Svg>
+  );
+}
+
 function LogoutIcon({ size = 24, color = '#000' }: { size?: number; color?: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -118,7 +141,7 @@ export function AppShell({ children, title = 'CalcPro', showHistory = true, onHi
   const { t } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
-  const { theme, toggleTheme, logout, isDrawerOpen, setDrawerOpen } = useAppStore();
+  const { theme, toggleTheme, logout, isDrawerOpen, setDrawerOpen, language, setLanguage } = useAppStore();
   const themeColors = colors[theme];
   
   const drawerAnim = React.useRef(new Animated.Value(0)).current;
@@ -163,6 +186,11 @@ export function AppShell({ children, title = 'CalcPro', showHistory = true, onHi
     setDrawerOpen(false);
     logout();
     router.replace('/login');
+  };
+
+  const handleLanguageChange = (lang: 'en' | 'es') => {
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
   };
 
   return (
@@ -281,18 +309,52 @@ export function AppShell({ children, title = 'CalcPro', showHistory = true, onHi
 
           {/* Drawer Footer */}
           <View style={[styles.drawerFooter, { borderTopColor: themeColors.border }]}>
-            <View style={styles.menuItem}>
-              <MoonIcon size={22} color={themeColors.textSecondary} />
+            {/* Language Selector */}
+            <View style={styles.languageContainer}>
+              <GlobeIcon size={22} color={themeColors.textSecondary} />
               <Text style={[styles.menuItemText, { color: themeColors.text, flex: 1 }]}>
-                {t('darkMode')}
+                {t('language')}
               </Text>
-              <Switch
-                value={theme === 'dark'}
-                onValueChange={toggleTheme}
-                trackColor={{ false: themeColors.border, true: themeColors.primary }}
-                thumbColor="#ffffff"
-              />
+              <View style={styles.languageButtons}>
+                {LANGUAGES.map((lang) => (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={[
+                      styles.languageButton,
+                      {
+                        backgroundColor: language === lang.code ? themeColors.primary : themeColors.surfaceSecondary,
+                      },
+                    ]}
+                    onPress={() => handleLanguageChange(lang.code as 'en' | 'es')}
+                  >
+                    <Text
+                      style={[
+                        styles.languageButtonText,
+                        { color: language === lang.code ? '#ffffff' : themeColors.text },
+                      ]}
+                    >
+                      {lang.code.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
+
+            {/* Theme Toggle */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={toggleTheme}
+              activeOpacity={0.7}
+            >
+              {theme === 'dark' ? (
+                <SunIcon size={22} color={themeColors.textSecondary} />
+              ) : (
+                <MoonIcon size={22} color={themeColors.textSecondary} />
+              )}
+              <Text style={[styles.menuItemText, { color: themeColors.text }]}>
+                {theme === 'dark' ? t('lightMode') : t('darkMode')}
+              </Text>
+            </TouchableOpacity>
             
             <TouchableOpacity
               style={styles.menuItem}
@@ -420,5 +482,26 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
+  },
+  languageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    marginHorizontal: spacing.sm,
+  },
+  languageButtons: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  languageButton: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
+  },
+  languageButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

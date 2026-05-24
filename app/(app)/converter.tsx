@@ -454,6 +454,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    maxWidth: 100,
   },
   unitSelectorText: {
     fontSize: 14,

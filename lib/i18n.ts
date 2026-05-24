@@ -13,6 +13,8 @@ const resources = {
       converter: 'Converter',
       matrixCas: 'Matrix / CAS',
       darkMode: 'Dark Mode',
+      lightMode: 'Light Mode',
+      language: 'Language',
       logout: 'Logout',
       
       // Auth
@@ -72,7 +74,7 @@ const resources = {
       
       // History
       history: 'History',
-      noHistory: 'No calculations yet',
+      noHistory: 'No history yet',
       clearHistory: 'Clear History',
       
       // Placeholders
@@ -95,11 +97,13 @@ const resources = {
       
       // Navigation
       calculator: 'Calculadora',
-      graphs: 'Gráficos',
+      graphs: 'Graficos',
       converter: 'Convertidor',
       matrixCas: 'Matriz / CAS',
       darkMode: 'Modo Oscuro',
-      logout: 'Cerrar Sesión',
+      lightMode: 'Modo Claro',
+      language: 'Idioma',
+      logout: 'Cerrar Sesion',
       
       // Auth
       welcomeBack: 'Bienvenido',
@@ -158,7 +162,7 @@ const resources = {
       
       // History
       history: 'Historial',
-      noHistory: 'Sin cálculos aún',
+      noHistory: 'Sin historial aun',
       clearHistory: 'Limpiar Historial',
       
       // Placeholders
