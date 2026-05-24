@@ -7,16 +7,23 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { useAppStore } from '@/lib/store';
 import { colors, borderRadius, spacing, shadows } from '@/lib/theme';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { Checkbox } from '@/components/ui/Checkbox';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Path, Rect, Circle } from 'react-native-svg';
+
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Espanol' },
+] as const;
 
 // Calculator icon component
 function CalculatorIcon({ size = 32, color = '#ffffff' }: { size?: number; color?: string }) {
@@ -49,10 +56,20 @@ function ArrowRightIcon({ size = 20, color = '#ffffff' }: { size?: number; color
   );
 }
 
+// Globe icon for language selector
+function GlobeIcon({ size = 24, color = '#000' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" />
+      <Path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke={color} strokeWidth="2" />
+    </Svg>
+  );
+}
+
 export default function LoginScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { theme, login, keepSignedIn, setKeepSignedIn } = useAppStore();
+  const { theme, login, keepSignedIn, setKeepSignedIn, language, setLanguage } = useAppStore();
   const themeColors = colors[theme];
 
   const [isLoginView, setIsLoginView] = useState(true);
@@ -64,6 +81,11 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
+
+  const handleLanguageChange = (lang: 'en' | 'es') => {
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
+  };
 
   const toggleView = () => {
     Animated.sequence([
@@ -118,6 +140,36 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+      {/* Language Selector at top */}
+      <View style={styles.languageSelectorContainer}>
+        <View style={[styles.languageSelector, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <GlobeIcon size={18} color={themeColors.textSecondary} />
+          <View style={styles.languageButtons}>
+            {LANGUAGES.map((lang) => (
+              <TouchableOpacity
+                key={lang.code}
+                style={[
+                  styles.languageButton,
+                  {
+                    backgroundColor: language === lang.code ? themeColors.primary : 'transparent',
+                  },
+                ]}
+                onPress={() => handleLanguageChange(lang.code as 'en' | 'es')}
+              >
+                <Text
+                  style={[
+                    styles.languageButtonText,
+                    { color: language === lang.code ? '#ffffff' : themeColors.text },
+                  ]}
+                >
+                  {lang.code.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </View>
+      
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -239,6 +291,34 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  languageSelectorContainer: {
+    position: 'absolute',
+    top: spacing.xl + spacing.lg,
+    right: spacing.md,
+    zIndex: 10,
+  },
+  languageSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+  },
+  languageButtons: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  languageButton: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
+  },
+  languageButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   keyboardView: {
     flex: 1,

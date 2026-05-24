@@ -37,6 +37,25 @@ function DeleteIcon({ size = 24, color = '#fff' }: { size?: number; color?: stri
   );
 }
 
+// Close icon for history modal
+function CloseIcon({ size = 24, color = '#000' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M18 6L6 18M6 6l12 12" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// History icon for empty state
+function HistoryClockIcon({ size = 48, color = '#94a3b8' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke={color} strokeWidth="2" />
+      <Path d="M12 6v6l4 2" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 // History modal component
 function HistoryModal({
   visible,
@@ -73,56 +92,73 @@ function HistoryModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Animated.View
+        <Pressable 
           style={[
             styles.historyModal,
-            {
-              backgroundColor: themeColors.surface,
-              transform: [{ translateX: slideAnim }],
-            },
+            { backgroundColor: themeColors.surface },
           ]}
+          onPress={(e) => e.stopPropagation()}
         >
-          <Pressable onPress={(e) => e.stopPropagation()}>
-            <View style={[styles.historyHeader, { borderBottomColor: themeColors.border }]}>
+          {/* Drag Handle */}
+          <View style={styles.dragHandleContainer}>
+            <View style={[styles.dragHandle, { backgroundColor: themeColors.border }]} />
+          </View>
+          
+          {/* Header with close button */}
+          <View style={[styles.historyHeader, { borderBottomColor: themeColors.border }]}>
+            <View style={styles.historyTitleRow}>
+              <HistoryClockIcon size={24} color={themeColors.textSecondary} />
               <Text style={[styles.historyTitle, { color: themeColors.text }]}>
                 {t('history')}
               </Text>
-              {history.length > 0 && (
-                <TouchableOpacity onPress={onClear}>
-                  <Text style={[styles.clearButton, { color: themeColors.error }]}>
-                    {t('clearHistory')}
-                  </Text>
-                </TouchableOpacity>
-              )}
             </View>
-            <ScrollView style={styles.historyList} showsVerticalScrollIndicator={false}>
-              {history.length === 0 ? (
+            <TouchableOpacity
+              onPress={onClose}
+              style={[styles.closeButton, { backgroundColor: themeColors.surfaceSecondary }]}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <CloseIcon size={18} color={themeColors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+          
+          {history.length > 0 && (
+            <TouchableOpacity 
+              onPress={onClear}
+              style={[styles.clearHistoryButton, { borderBottomColor: themeColors.border }]}
+            >
+              <Text style={[styles.clearButton, { color: themeColors.error }]}>
+                {t('clearHistory')}
+              </Text>
+            </TouchableOpacity>
+          )}
+          
+          <ScrollView style={styles.historyList} showsVerticalScrollIndicator={false}>
+            {history.length === 0 ? (
+              <View style={styles.emptyHistoryContainer}>
+                <HistoryClockIcon size={48} color={themeColors.textMuted} />
                 <Text style={[styles.emptyHistory, { color: themeColors.textMuted }]}>
                   {t('noHistory')}
                 </Text>
-              ) : (
-                history.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[styles.historyItem, { borderBottomColor: themeColors.border }]}
-                    onPress={() => {
-                      onSelect(item);
-                      onClose();
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.historyExpression, { color: themeColors.textSecondary }]}>
-                      {item.expression}
-                    </Text>
-                    <Text style={[styles.historyResult, { color: themeColors.text }]}>
-                      = {item.result}
-                    </Text>
-                  </TouchableOpacity>
-                ))
-              )}
-            </ScrollView>
-          </Pressable>
-        </Animated.View>
+              </View>
+            ) : (
+              history.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.historyItem, { borderBottomColor: themeColors.border }]}
+                  onPress={() => {
+                    onSelect(item);
+                    onClose();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.historyResult, { color: themeColors.text }]}>
+                    {item.result}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
+        </Pressable>
       </Pressable>
     </Modal>
   );
@@ -529,18 +565,18 @@ const styles = StyleSheet.create({
   },
   keypad: {
     flex: 1,
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   scientificPad: {
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   basicPad: {
     flex: 1,
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   buttonWrapper: {
     flex: 1,
@@ -570,26 +606,51 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
-    alignItems: 'flex-end',
   },
   historyModal: {
-    width: 320,
-    maxWidth: '90%',
-    height: '100%',
+    width: '100%',
+    maxHeight: '70%',
     borderTopLeftRadius: borderRadius.xl,
-    borderBottomLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
     ...shadows.lg,
+  },
+  dragHandleContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
   },
   historyHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
     borderBottomWidth: 1,
   },
+  historyTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   historyTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearHistoryButton: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderBottomWidth: 1,
   },
   clearButton: {
     fontSize: 14,
@@ -599,9 +660,14 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: spacing.md,
   },
+  emptyHistoryContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl,
+  },
   emptyHistory: {
     textAlign: 'center',
-    marginTop: spacing.xl,
+    marginTop: spacing.md,
     fontSize: 14,
   },
   historyItem: {
